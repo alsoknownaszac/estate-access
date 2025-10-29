@@ -13,38 +13,33 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { mockLogin, storeUser } from "@/lib/auth";
+import { useAuthStore } from "@/stores/auth-store";
 import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { login, isLoading, error, clearError } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    clearError();
 
     try {
-      const user = mockLogin(email, password);
-      if (user) {
-        storeUser(user);
-        toast({
-          title: "Success",
-          description: "Logged in successfully",
-        });
-        router.push("/dashboard");
-      } else {
-        toast({
-          title: "Error",
-          description: "Invalid email or password",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsLoading(false);
+      await login(email, password);
+      toast({
+        title: "Success",
+        description: "Logged in successfully",
+      });
+      router.push("/dashboard");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Login failed",
+        variant: "destructive",
+      });
     }
   };
 

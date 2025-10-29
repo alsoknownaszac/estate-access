@@ -2,16 +2,17 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { clearUser } from "@/lib/auth";
+import { useAuthStore } from "@/stores/auth-store";
 import { Users, LogOut, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { logout } = useAuthStore();
 
   const handleLogout = () => {
-    clearUser();
+    logout();
     router.push("/login");
   };
 

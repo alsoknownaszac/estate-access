@@ -1,7 +1,7 @@
 "use client";
 
 import { AuthenticatedLayout } from "@/components/authenticated-layout";
-import { useResidents } from "@/hooks/use-residents";
+import { useResidentsStore } from "@/stores/residents-store";
 import {
   Card,
   CardContent,
@@ -10,10 +10,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useStats } from "@/hooks/use-stats";
+import { useEffect } from "react";
 
 export default function DashboardPage() {
-  const { residents, isLoading } = useResidents();
+  const { residents, isLoading, loadResidents } = useResidentsStore();
   const stats = useStats(residents);
+
+  useEffect(() => {
+    loadResidents();
+  }, [loadResidents]);
 
   return (
     <AuthenticatedLayout>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -9,7 +9,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useResidents } from "@/hooks/use-residents";
+import {
+  useResidentsStore,
+  useFilteredResidents,
+  usePaginatedResidents,
+} from "@/stores/residents-store";
 import { useToast } from "@/hooks/use-toast";
 import { SearchFilterBar } from "@/components/search-filter-bar";
 import { ResidentsTable } from "@/components/residents-table";
@@ -23,179 +27,110 @@ import {
 } from "@/components/ui/dialog";
 import { DeleteConfirmationDialog } from "@/components/delete-confirmation-dialog";
 import { Pagination } from "@/components/pagination";
-import type { Resident } from "@/lib/mock-data";
 import { Plus } from "lucide-react";
 
-const ITEMS_PER_PAGE = 5;
-
 export function ResidentsPage() {
-  const { residents, addResident, updateResident, deleteResident, isLoading } =
-    useResidents();
   const { toast } = useToast();
+  const {
+    isLoading,
+    searchQuery,
+    filterType,
+    sortBy,
+    sortOrder,
+    currentPage,
+    modalOpen,
+    editingResident,
+    deleteConfirmOpen,
+    deleteResidentId,
+    loadResidents,
+    addResident,
+    updateResident,
+    deleteResident,
+    setSearchQuery,
+    setFilterType,
+    setSorting,
+    setCurrentPage,
+    openModal,
+    closeModal,
+    openDeleteConfirm,
+    closeDeleteConfirm,
+  } = useResidentsStore();
 
-  // Consolidated state management
-  const [filters, setFilters] = useState({
-    searchQuery: "",
-    filterType: "all" as "all" | "Resident" | "Visitor" | "Staff",
-    sortBy: "name" as keyof Resident,
-    sortOrder: "asc" as "asc" | "desc",
-  });
+  const filteredResidents = useFilteredResidents();
+  const { residents: paginatedResidents, totalPages } = usePaginatedResidents();
 
-  const [modal, setModal] = useState({
-    isOpen: false,
-    editingResident: undefined as Resident | undefined,
-    isSubmitting: false,
-  });
+  useEffect(() => {
+    loadResidents();
+  }, [loadResidents]);
 
-  const [deleteState, setDeleteState] = useState({
-    isConfirmOpen: false,
-    residentId: null as string | null,
-  });
-
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const filteredResidents = useMemo(() => {
-    let result = [...residents];
-
-    // Apply search filter
-    if (filters.searchQuery) {
-      result = result.filter(
-        (resident) =>
-          resident.name
-            .toLowerCase()
-            .includes(filters.searchQuery.toLowerCase()) ||
-          resident.houseNumber
-            .toLowerCase()
-            .includes(filters.searchQuery.toLowerCase())
-      );
-    }
-
-    // Apply access type filter
-    if (filters.filterType !== "all") {
-      result = result.filter(
-        (resident) => resident.accessType === filters.filterType
-      );
-    }
-
-    // Apply sorting
-    result.sort((a, b) => {
-      const aValue = a[filters.sortBy];
-      const bValue = b[filters.sortBy];
-
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        return filters.sortOrder === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-
-      return 0;
-    });
-
-    return result;
-  }, [residents, filters]);
-
-  const totalPages = Math.ceil(filteredResidents.length / ITEMS_PER_PAGE);
-  const paginatedResidents = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredResidents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredResidents, currentPage]);
-
-  const handleAddResident = async (data: Omit<Resident, "id">) => {
+  const handleAddResident = async (data: any) => {
     try {
-      setModal((prev) => ({ ...prev, isSubmitting: true }));
       await addResident(data);
       toast({
         title: "Success",
         description: "Resident added successfully",
       });
-      setModal({
-        isOpen: false,
-        editingResident: undefined,
-        isSubmitting: false,
-      });
-      setCurrentPage(1);
+      closeModal();
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to add resident",
         variant: "destructive",
       });
-    } finally {
-      setModal((prev) => ({ ...prev, isSubmitting: false }));
     }
   };
 
-  const handleEditResident = (resident: Resident) => {
-    setModal({ isOpen: true, editingResident: resident, isSubmitting: false });
+  const handleEditResident = (resident: any) => {
+    openModal("edit", resident);
   };
 
-  const handleUpdateResident = async (data: Omit<Resident, "id">) => {
-    if (modal.editingResident) {
+  const handleUpdateResident = async (data: any) => {
+    if (editingResident) {
       try {
-        setModal((prev) => ({ ...prev, isSubmitting: true }));
-        await updateResident(modal.editingResident.id, data);
+        await updateResident(editingResident.id, data);
         toast({
           title: "Success",
           description: "Resident updated successfully",
         });
-        setModal({
-          isOpen: false,
-          editingResident: undefined,
-          isSubmitting: false,
-        });
+        closeModal();
       } catch (error) {
         toast({
           title: "Error",
           description: "Failed to update resident",
           variant: "destructive",
         });
-      } finally {
-        setModal((prev) => ({ ...prev, isSubmitting: false }));
       }
     }
   };
 
   const handleDeleteResident = (id: string) => {
-    setDeleteState({ isConfirmOpen: true, residentId: id });
+    openDeleteConfirm(id);
   };
 
   const handleConfirmDelete = async () => {
-    if (deleteState.residentId) {
+    if (deleteResidentId) {
       try {
-        setModal((prev) => ({ ...prev, isSubmitting: true }));
-        await deleteResident(deleteState.residentId);
+        await deleteResident(deleteResidentId);
         toast({
           title: "Success",
           description: "Resident deleted successfully",
         });
-        setDeleteState({ isConfirmOpen: false, residentId: null });
+        closeDeleteConfirm();
       } catch (error) {
         toast({
           title: "Error",
           description: "Failed to delete resident",
           variant: "destructive",
         });
-      } finally {
-        setModal((prev) => ({ ...prev, isSubmitting: false }));
       }
     }
   };
 
-  const handleSort = (column: keyof Resident) => {
-    setFilters((prev) => ({
-      ...prev,
-      sortBy: column,
-      sortOrder:
-        prev.sortBy === column && prev.sortOrder === "asc" ? "desc" : "asc",
-    }));
-  };
-
-  const handleCloseModal = () => {
-    setModal({
-      isOpen: false,
-      editingResident: undefined,
-      isSubmitting: false,
-    });
+  const handleSort = (column: any) => {
+    setSorting(
+      column,
+      sortBy === column && sortOrder === "asc" ? "desc" : "asc"
+    );
   };
 
   return (
@@ -207,16 +142,7 @@ export function ResidentsPage() {
             Manage resident and visitor access
           </p>
         </div>
-        <Button
-          onClick={() =>
-            setModal({
-              isOpen: true,
-              editingResident: undefined,
-              isSubmitting: false,
-            })
-          }
-          className="gap-2"
-        >
+        <Button onClick={() => openModal("add")} className="gap-2">
           <Plus className="h-4 w-4" />
           Add Resident
         </Button>
@@ -232,14 +158,10 @@ export function ResidentsPage() {
           </CardHeader>
           <CardContent>
             <SearchFilterBar
-              searchQuery={filters.searchQuery}
-              onSearchChange={(query) =>
-                setFilters((prev) => ({ ...prev, searchQuery: query }))
-              }
-              filterType={filters.filterType}
-              onFilterChange={(type) =>
-                setFilters((prev) => ({ ...prev, filterType: type as any }))
-              }
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              filterType={filterType}
+              onFilterChange={setFilterType}
             />
           </CardContent>
         </Card>
@@ -266,8 +188,8 @@ export function ResidentsPage() {
                   residents={paginatedResidents}
                   onEdit={handleEditResident}
                   onDelete={handleDeleteResident}
-                  sortBy={filters.sortBy}
-                  sortOrder={filters.sortOrder}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
                   onSort={handleSort}
                 />
                 {totalPages > 1 && (
@@ -283,34 +205,32 @@ export function ResidentsPage() {
         </Card>
       </div>
 
-      <Dialog open={modal.isOpen} onOpenChange={handleCloseModal}>
+      <Dialog open={modalOpen} onOpenChange={closeModal}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {modal.editingResident ? "Edit Resident" : "Add New Resident"}
+              {editingResident ? "Edit Resident" : "Add New Resident"}
             </DialogTitle>
             <DialogDescription>
-              {modal.editingResident
+              {editingResident
                 ? "Update the resident information"
                 : "Enter the details for the new resident"}
             </DialogDescription>
           </DialogHeader>
           <ResidentForm
-            resident={modal.editingResident}
+            resident={editingResident}
             onSubmit={
-              modal.editingResident ? handleUpdateResident : handleAddResident
+              editingResident ? handleUpdateResident : handleAddResident
             }
-            onCancel={handleCloseModal}
-            isLoading={modal.isSubmitting}
+            onCancel={closeModal}
+            isLoading={isLoading}
           />
         </DialogContent>
       </Dialog>
 
       <DeleteConfirmationDialog
-        open={deleteState.isConfirmOpen}
-        onOpenChange={(open) =>
-          setDeleteState((prev) => ({ ...prev, isConfirmOpen: open }))
-        }
+        open={deleteConfirmOpen}
+        onOpenChange={(open) => !open && closeDeleteConfirm()}
         onConfirm={handleConfirmDelete}
       />
     </div>

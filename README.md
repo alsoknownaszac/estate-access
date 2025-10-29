@@ -92,9 +92,14 @@ estate-dashboard/
 │   └── topbar.tsx              # Top navigation bar
 ├── hooks/
 │   ├── use-mobile.ts           # Custom hook for mobile detection
-│   ├── use-residents.ts        # Custom hook for resident data
+│   ├── use-residents.ts        # Custom hook for resident data (legacy)
 │   ├── use-stats.ts            # Custom hook for dashboard stats
 │   └── use-toast.ts            # Toast notification hook
+├── stores/
+│   ├── auth-store.ts           # Authentication state with Zustand
+│   ├── theme-store.ts          # Dark mode theme state
+│   ├── residents-store.ts      # Residents data and UI state
+│   └── ui-store.ts             # Sidebar and UI preferences
 ├── lib/
 │   ├── api-service.ts          # API layer abstraction
 │   ├── auth.ts                 # Authentication utilities
@@ -114,10 +119,14 @@ estate-dashboard/
 
 ### State Management
 
-- **Local State (useState)**: For UI state like modals, pagination, and form inputs
-- **Custom Hooks**: `useResidents` hook encapsulates all resident data logic
-- **LocalStorage**: Persists residents data and user session between sessions
-- **No Global State Library**: Given the app's scope, React's built-in state management is sufficient
+The application uses **Zustand** for centralized state management
+
+#### Store Architecture
+
+- **Authentication Store** (`auth-store.ts`): Manages user session, login/logout actions, and derived authentication status
+- **Theme Store** (`theme-store.ts`): Handles dark mode toggle with automatic DOM manipulation and persistence
+- **Residents Store** (`residents-store.ts`): Comprehensive store with flattened state structure for residents data, filters, pagination, and modals
+- **UI Store** (`ui-store.ts`): Manages sidebar preferences and UI state with persist middleware
 
 ### Styling
 
@@ -225,6 +234,7 @@ pnpm start
 - **React 19**: UI library
 - **TypeScript 5**: Type safety
 - **Tailwind CSS 4**: Utility-first CSS
+- **Zustand 5**: Lightweight state management
 - **react-hook-form 7**: Form management
 - **Zod 3**: Schema validation
 - **Radix UI**: Accessible component primitives
@@ -244,10 +254,12 @@ Current implementation uses:
 ## 👨‍💻 Development Notes
 
 - The app uses Next.js App Router (not Pages Router)
+- State management is handled by Zustand with persist middleware
 - All API calls are mocked with simulated delays
 - Data persists in localStorage for demo purposes
 - Dark mode preference is stored separately in localStorage
 - Form validation runs on client-side before submission
+- Residents data management has been migrated from custom hooks to Zustand stores
 
 ## 📄 License
 
@@ -255,4 +267,4 @@ This is a demo project for educational purposes.
 
 ---
 
-Built with ❤️ using Next.js, React, and TypeScript
+Built with ❤️ using Next.js, React, TypeScript, and Zustand

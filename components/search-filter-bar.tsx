@@ -1,17 +1,28 @@
-"use client"
+"use client";
 
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search } from "lucide-react"
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search } from "lucide-react";
 
 interface SearchFilterBarProps {
-  searchQuery: string
-  onSearchChange: (query: string) => void
-  filterType: string
-  onFilterChange: (type: string) => void
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  filterType: string;
+  onFilterChange: (type: string) => void;
 }
 
-export function SearchFilterBar({ searchQuery, onSearchChange, filterType, onFilterChange }: SearchFilterBarProps) {
+export function SearchFilterBar({
+  searchQuery,
+  onSearchChange,
+  filterType,
+  onFilterChange,
+}: SearchFilterBarProps) {
   return (
     <div className="flex gap-4 flex-col sm:flex-row">
       <div className="flex-1 relative">
@@ -23,11 +34,15 @@ export function SearchFilterBar({ searchQuery, onSearchChange, filterType, onFil
           className="pl-10"
         />
       </div>
-      <Select value={filterType} onValueChange={onFilterChange}>
-        <SelectTrigger className="w-full sm:w-48">
+      <Select
+        value={filterType}
+        onValueChange={onFilterChange}
+        suppressHydrationWarning
+      >
+        <SelectTrigger className="w-full sm:w-48" suppressHydrationWarning>
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent suppressHydrationWarning>
           <SelectItem value="all">All Access Types</SelectItem>
           <SelectItem value="Resident">Resident</SelectItem>
           <SelectItem value="Visitor">Visitor</SelectItem>
@@ -35,5 +50,5 @@ export function SearchFilterBar({ searchQuery, onSearchChange, filterType, onFil
         </SelectContent>
       </Select>
     </div>
-  )
+  );
 }

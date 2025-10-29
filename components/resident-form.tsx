@@ -100,14 +100,19 @@ export function ResidentForm({
           name="accessType"
           control={control}
           render={({ field }) => (
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              suppressHydrationWarning
+            >
               <SelectTrigger
                 id="accessType"
                 className={errors.accessType ? "border-red-500" : ""}
+                suppressHydrationWarning
               >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent suppressHydrationWarning>
                 <SelectItem value="Resident">Resident</SelectItem>
                 <SelectItem value="Visitor">Visitor</SelectItem>
                 <SelectItem value="Staff">Staff</SelectItem>
